@@ -2,7 +2,7 @@
 
 A multilingual PDF-to-narration and audio learning assistant powered by **Gemma 4 26B**.
 
-Gemma Book Narrator Agent transforms long PDF books, textbooks, and reading materials into structured narration scripts and playable audio. It is designed for students, readers, and multilingual learners who need a faster and more accessible way to understand long documents.
+Gemma Book Narrator Agent transforms long PDF books, textbooks, novels, and reading materials into structured narration scripts and playable audio. It is designed for students, readers, and multilingual learners who need a faster and more accessible way to understand long documents.
 
 ---
 
@@ -154,38 +154,18 @@ User
 
 ---
 
-## Recommended Local Directory Layout
-
-For the local demo, place the projects under the Desktop directory:
-
-```text
-~/Desktop/
-├── book-commentary-frontend-rebuild/
-│   └── Vue frontend application
-├── backend-feature2.1_副本/
-│   └── FastAPI backend service
-├── agent-master/
-│   └── Local Gemma 4 Agent service
-└── shared/
-    └── books/
-        └── uploaded PDF files
-```
-
-The `shared/books` folder is used to store uploaded PDF files.
-
-Because the backend and Agent both run locally, the Agent can directly read the PDF path sent by the backend.
-
----
-
 ## Project Structure
 
+The final GitHub repository uses the following folder names:
+
 ```text
-project-root/
+book-narrator/
+├── README.md
 ├── frontend/
 │   └── Vue frontend application
 ├── backend/
 │   └── FastAPI backend service
-├── agent-master/
+├── agent/
 │   └── Local Gemma 4 Agent service
 └── shared/
     └── books/
@@ -197,8 +177,29 @@ Each service has its own README:
 ```text
 frontend/README.md
 backend/README.md
-agent-master/README.md
+agent/README.md
 ```
+
+---
+
+## Recommended Local Directory Layout
+
+For the local demo, place the project under the Desktop directory:
+
+```text
+~/Desktop/
+└── book-narrator/
+    ├── README.md
+    ├── frontend/
+    ├── backend/
+    ├── agent/
+    └── shared/
+        └── books/
+```
+
+The `shared/books` folder is used to store uploaded PDF files.
+
+Because the backend and Agent both run locally, the Agent can directly read the PDF path sent by the backend.
 
 ---
 
@@ -443,7 +444,7 @@ ollama run gemma4:26b
 Open a new terminal and run:
 
 ```bash
-cd ~/Desktop/agent-master
+cd ~/Desktop/book-narrator/agent
 
 uvicorn src.api.server:app --reload --host 127.0.0.1 --port 8000
 ```
@@ -476,7 +477,7 @@ The Agent service is responsible for:
 Open another terminal and run:
 
 ```bash
-cd ~/Desktop/backend-feature2.1_副本
+cd ~/Desktop/book-narrator/backend
 
 pip install -r requirements.txt
 
@@ -510,7 +511,7 @@ curl http://127.0.0.1:8080/health
 Open another terminal and run:
 
 ```bash
-cd ~/Desktop/book-commentary-frontend-rebuild
+cd ~/Desktop/book-narrator/frontend
 
 npm install
 
@@ -543,7 +544,7 @@ DATABASE_URL=sqlite:///./app.db
 
 AGENT_BASE_URL=http://127.0.0.1:8000
 
-SHARED_BOOKS_DIR=~/Desktop/shared/books
+SHARED_BOOKS_DIR=~/Desktop/book-narrator/shared/books
 ```
 
 The frontend can use:
@@ -709,7 +710,7 @@ curl -X POST http://127.0.0.1:8080/agent/book-narrate \
 Uploaded PDFs are saved into:
 
 ```text
-~/Desktop/shared/books
+~/Desktop/book-narrator/shared/books
 ```
 
 This folder is important because both the backend and the local Agent service need to access the same PDF files.
@@ -717,7 +718,7 @@ This folder is important because both the backend and the local Agent service ne
 If the folder does not exist, create it manually:
 
 ```bash
-mkdir -p ~/Desktop/shared/books
+mkdir -p ~/Desktop/book-narrator/shared/books
 ```
 
 In the recommended local demo setup, the backend and Agent run on the same machine. Therefore, the Agent can directly read uploaded PDFs from this directory.
@@ -804,7 +805,7 @@ Solution:
 Start the Agent service:
 
 ```bash
-cd ~/Desktop/agent-master
+cd ~/Desktop/book-narrator/agent
 
 uvicorn src.api.server:app --reload --host 127.0.0.1 --port 8000
 ```
@@ -862,13 +863,13 @@ Solution:
 Make sure the backend and Agent are running on the same local machine and that the PDF exists in:
 
 ```text
-~/Desktop/shared/books
+~/Desktop/book-narrator/shared/books
 ```
 
 Check:
 
 ```bash
-ls -lh ~/Desktop/shared/books
+ls -lh ~/Desktop/book-narrator/shared/books
 ```
 
 ---
@@ -895,7 +896,7 @@ ls -lh output/audio
 Check the Agent debug prompt if available:
 
 ```bash
-cd ~/Desktop/agent-master
+cd ~/Desktop/book-narrator/agent
 
 latest=$(ls -t debug_prompts/*.txt | head -1)
 
