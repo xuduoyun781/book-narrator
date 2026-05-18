@@ -83,12 +83,13 @@ Generated narration script and audio
 For the local demo, the frontend is expected to run together with the backend, Agent service, and shared PDF folder on the same machine.
 
 ```text
-~/Desktop/
-├── book-commentary-frontend-rebuild/
+~/Desktop/book-narrator/
+├── README.md
+├── frontend/
 │   └── Vue frontend application
-├── backend-feature2.1_副本/
+├── backend/
 │   └── FastAPI backend service
-├── agent-master/
+├── agent/
 │   └── Local Gemma 4 Agent service
 └── shared/
     └── books/
@@ -106,6 +107,14 @@ The backend communicates with the local Agent service:
 ```text
 http://127.0.0.1:8000
 ```
+
+Uploaded PDFs are saved by the backend into:
+
+```text
+~/Desktop/book-narrator/shared/books
+```
+
+Because the backend and Agent run locally on the same machine, the Agent can directly read uploaded PDFs from this shared directory.
 
 ---
 
@@ -153,6 +162,8 @@ The frontend can also use the environment variable:
 VITE_API_BASE_URL=http://127.0.0.1:8080
 ```
 
+---
+
 ### `src/api/bookNarrator.ts`
 
 Contains APIs for:
@@ -172,6 +183,8 @@ GET  /agent/books/{book_id}/outline
 POST /agent/book-narrate
 POST /agent/narration-history/{task_id}/cancel
 ```
+
+---
 
 ### `src/api/narrationHistory.ts`
 
@@ -237,7 +250,7 @@ The History page allows users to:
 * view previous narration tasks,
 * search history,
 * view generated scripts,
-* play generated audio,
+* play audio,
 * rename tasks,
 * add notes,
 * mark tasks as favorites,
@@ -330,7 +343,7 @@ http://127.0.0.1:8080
 ## Install Dependencies
 
 ```bash
-cd ~/Desktop/book-commentary-frontend-rebuild
+cd ~/Desktop/book-narrator/frontend
 
 npm install
 ```
@@ -340,7 +353,7 @@ npm install
 ## Start the Frontend
 
 ```bash
-cd ~/Desktop/book-commentary-frontend-rebuild
+cd ~/Desktop/book-narrator/frontend
 
 npm run dev
 ```
@@ -357,15 +370,19 @@ Open this URL in the browser to use the application.
 
 ## Required Services Before Running the Frontend
 
-Before using the frontend, make sure the backend and local Agent service are running.
+Before using the frontend, make sure the local Gemma 4 model runtime, Agent service, and backend service are running.
 
-### 1. Start the local Gemma 4 model runtime
+---
+
+### 1. Start the Local Gemma 4 Model Runtime
 
 If using Ollama:
 
 ```bash
 ollama serve
 ```
+
+If Ollama is already running in the background, this step may not be necessary.
 
 Make sure the model exists:
 
@@ -385,12 +402,18 @@ If missing:
 ollama pull gemma4:26b
 ```
 
----
-
-### 2. Start the local Agent service
+Test the model:
 
 ```bash
-cd ~/Desktop/agent-master
+ollama run gemma4:26b
+```
+
+---
+
+### 2. Start the Local Agent Service
+
+```bash
+cd ~/Desktop/book-narrator/agent
 
 uvicorn src.api.server:app --reload --host 127.0.0.1 --port 8000
 ```
@@ -403,10 +426,10 @@ curl http://127.0.0.1:8000/api/v1/health
 
 ---
 
-### 3. Start the backend service
+### 3. Start the Backend Service
 
 ```bash
-cd ~/Desktop/backend-feature2.1_副本
+cd ~/Desktop/book-narrator/backend
 
 uvicorn app.main:app --reload --port 8080
 ```
@@ -483,7 +506,7 @@ When a user creates a narration task, the frontend sends a request similar to:
 {
   "task_name": "My narration task",
   "book_id": "example_book_id",
-  "style": "短视频",
+  "style": "Short-video Style",
   "voice": "Ava",
   "reading_mode": "quick",
   "output_language": "en",
@@ -505,7 +528,7 @@ The frontend uploads PDF files through the backend.
 The backend saves uploaded PDFs into:
 
 ```text
-~/Desktop/shared/books
+~/Desktop/book-narrator/shared/books
 ```
 
 Because the backend and Agent run locally on the same machine, the Agent can directly read the PDF files from this directory.
@@ -513,7 +536,7 @@ Because the backend and Agent run locally on the same machine, the Agent can dir
 If the folder does not exist, create it manually:
 
 ```bash
-mkdir -p ~/Desktop/shared/books
+mkdir -p ~/Desktop/book-narrator/shared/books
 ```
 
 ---
@@ -556,7 +579,7 @@ curl http://127.0.0.1:8080/health
 If it fails, start backend:
 
 ```bash
-cd ~/Desktop/backend-feature2.1_副本
+cd ~/Desktop/book-narrator/backend
 
 uvicorn app.main:app --reload --port 8080
 ```
@@ -578,7 +601,7 @@ The local Agent service is not running.
 Start Agent:
 
 ```bash
-cd ~/Desktop/agent-master
+cd ~/Desktop/book-narrator/agent
 
 uvicorn src.api.server:app --reload --host 127.0.0.1 --port 8000
 ```
@@ -591,7 +614,41 @@ curl http://127.0.0.1:8000/api/v1/health
 
 ---
 
-### 3. No Audio Is Displayed
+### 3. Gemma 4 26B Model Is Not Running
+
+Error symptoms:
+
+* Agent starts but generation fails.
+* The local model runtime cannot find `gemma4:26b`.
+* Model calls fail.
+
+Check Ollama:
+
+```bash
+ollama list
+```
+
+Start Ollama if needed:
+
+```bash
+ollama serve
+```
+
+Pull the model if missing:
+
+```bash
+ollama pull gemma4:26b
+```
+
+Test the model:
+
+```bash
+ollama run gemma4:26b
+```
+
+---
+
+### 4. No Audio Is Displayed
 
 Possible causes:
 
@@ -603,26 +660,26 @@ Possible causes:
 Check backend logs and verify generated audio files:
 
 ```bash
-cd ~/Desktop/backend-feature2.1_副本
+cd ~/Desktop/book-narrator/backend
 
 ls -lh output/audio
 ```
 
 ---
 
-### 4. Uploaded PDF Does Not Appear
+### 5. Uploaded PDF Does Not Appear
 
 Check backend shared directory:
 
 ```bash
-ls -lh ~/Desktop/shared/books
+ls -lh ~/Desktop/book-narrator/shared/books
 ```
 
 If the PDF is missing, upload it again through the frontend.
 
 ---
 
-### 5. Output Language Is Wrong
+### 6. Output Language Is Wrong
 
 The frontend sends `output_language` to the backend.
 
@@ -675,4 +732,3 @@ dist/
 ## License
 
 This frontend is for educational and hackathon demonstration purposes.
-
