@@ -76,12 +76,13 @@ The Agent then calls the local Gemma 4 26B model.
 For the local demo, the frontend, backend, Agent service, and shared PDF directory should be placed on the same machine.
 
 ```text
-~/Desktop/
-├── book-commentary-frontend-rebuild/
+~/Desktop/book-narrator/
+├── README.md
+├── frontend/
 │   └── Vue frontend application
-├── backend-feature2.1_副本/
+├── backend/
 │   └── FastAPI backend service
-├── agent-master/
+├── agent/
 │   └── Local Gemma 4 Agent service
 └── shared/
     └── books/
@@ -93,7 +94,7 @@ This local layout is important because the backend sends PDF paths to the Agent 
 Example PDF path:
 
 ```text
-~/Desktop/shared/books/example.pdf
+~/Desktop/book-narrator/shared/books/example.pdf
 ```
 
 Since the backend and Agent run locally on the same machine, the Agent can directly read the uploaded PDF files from this shared directory.
@@ -103,7 +104,7 @@ Since the backend and Agent run locally on the same machine, the Agent can direc
 ## Project Structure
 
 ```text
-agent-master/
+agent/
 ├── src/
 │   ├── api/
 │   │   └── server.py                  # Agent API service
@@ -270,7 +271,7 @@ ollama pull gemma4:26b
 Open a new terminal and run:
 
 ```bash
-cd ~/Desktop/agent-master
+cd ~/Desktop/book-narrator/agent
 
 uvicorn src.api.server:app --reload --host 127.0.0.1 --port 8000
 ```
@@ -337,13 +338,13 @@ The Agent must be able to access the PDF path sent by the backend.
 In this local demo, uploaded PDFs are stored in:
 
 ```text
-~/Desktop/shared/books
+~/Desktop/book-narrator/shared/books
 ```
 
 Example:
 
 ```text
-/Users/your-name/Desktop/shared/books/example.pdf
+/Users/your-name/Desktop/book-narrator/shared/books/example.pdf
 ```
 
 Because the Agent and backend run on the same machine, the Agent can directly read this path.
@@ -459,7 +460,7 @@ debug_prompts/
 To inspect the latest prompt:
 
 ```bash
-cd ~/Desktop/agent-master
+cd ~/Desktop/book-narrator/agent
 
 latest=$(ls -t debug_prompts/*.txt | head -1)
 
@@ -494,7 +495,7 @@ Connection refused: localhost:8000
 Solution:
 
 ```bash
-cd ~/Desktop/agent-master
+cd ~/Desktop/book-narrator/agent
 
 uvicorn src.api.server:app --reload --host 127.0.0.1 --port 8000
 ```
@@ -546,13 +547,13 @@ Solution:
 Make sure the PDF exists in:
 
 ```text
-~/Desktop/shared/books
+~/Desktop/book-narrator/shared/books
 ```
 
 Check:
 
 ```bash
-ls -lh ~/Desktop/shared/books
+ls -lh ~/Desktop/book-narrator/shared/books
 ```
 
 If the Agent and backend are not on the same machine, the path may not be accessible. For this project, run both services locally.
@@ -564,7 +565,7 @@ If the Agent and backend are not on the same machine, the path may not be access
 Check the latest debug prompt:
 
 ```bash
-cd ~/Desktop/agent-master
+cd ~/Desktop/book-narrator/agent
 
 latest=$(ls -t debug_prompts/*.txt | head -1)
 
@@ -647,7 +648,7 @@ The project focuses on:
 * Digital Equity and Inclusivity
 * Multilingual learning support
 * Accessible PDF understanding
-* Audio-based learning
+* Audio-based learning.
 
 ---
 
