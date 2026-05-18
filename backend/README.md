@@ -19,7 +19,7 @@ FastAPI Backend
     |
     | Save uploaded PDFs
     v
-~/Desktop/shared/books
+~/Desktop/book-narrator/shared/books
     |
     | Send PDF path and task settings
     v
@@ -39,7 +39,7 @@ FastAPI Backend
 Vue Frontend
 ```
 
-The frontend does not directly call the Agent or Gemma 4.
+The frontend does not directly call the Agent or Gemma 4.  
 The frontend only communicates with this backend service.
 
 The backend communicates with the local Agent service through:
@@ -52,48 +52,49 @@ http://127.0.0.1:8000
 
 ## Main Responsibilities
 
-* Receive uploaded PDF files from the frontend.
-* Automatically create and use the shared book directory.
-* Save uploaded PDFs into `~/Desktop/shared/books`.
-* List uploaded books.
-* Get PDF outline or page count.
-* Create narration tasks.
-* Send PDF path, page range, reading mode, narration style, output language, voice, and user requirements to the local Agent service.
-* Receive generated narration script from the Agent.
-* Generate audio from the final script.
-* Store narration task history in SQLite.
-* Support task status polling.
-* Support task cancellation.
-* Support task renaming, notes, and favorites.
-* Serve generated audio files to the frontend.
+- Receive uploaded PDF files from the frontend.
+- Automatically create and use the shared book directory.
+- Save uploaded PDFs into `~/Desktop/book-narrator/shared/books`.
+- List uploaded books.
+- Get PDF outline or page count.
+- Create narration tasks.
+- Send PDF path, page range, reading mode, narration style, output language, voice, and user requirements to the local Agent service.
+- Receive generated narration script from the Agent.
+- Generate audio from the final script.
+- Store narration task history in SQLite.
+- Support task status polling.
+- Support task cancellation.
+- Support task renaming, notes, and favorites.
+- Serve generated audio files to the frontend.
 
 ---
 
 ## Technology Stack
 
-| Component         | Technology                 |
-| ----------------- | -------------------------- |
-| Web Framework     | FastAPI                    |
-| Database          | SQLite                     |
-| ORM               | SQLAlchemy                 |
-| Agent Client      | Requests                   |
-| Audio Generation  | Edge TTS                   |
+| Component | Technology |
+| --- | --- |
+| Web Framework | FastAPI |
+| Database | SQLite |
+| ORM | SQLAlchemy |
+| Agent Client | Requests |
+| Audio Generation | Edge TTS |
 | Config Management | `.env` + pydantic-settings |
-| API Docs          | Swagger / OpenAPI          |
+| API Docs | Swagger / OpenAPI |
 
 ---
 
 ## Recommended Local Directory Layout
 
-For the local demo, the frontend, backend, Agent service, and shared PDF directory should be placed on the same machine.
+For the local demo, the frontend, backend, Agent service, and shared PDF directory should be placed under the same project folder.
 
 ```text
-~/Desktop/
-├── book-commentary-frontend-rebuild/
+~/Desktop/book-narrator/
+├── README.md
+├── frontend/
 │   └── Vue frontend application
-├── backend-feature2.1_副本/
+├── backend/
 │   └── FastAPI backend service
-├── agent-master/
+├── agent/
 │   └── Local Gemma 4 Agent service
 └── shared/
     └── books/
@@ -103,7 +104,7 @@ For the local demo, the frontend, backend, Agent service, and shared PDF directo
 The backend saves uploaded PDFs into:
 
 ```text
-~/Desktop/shared/books
+~/Desktop/book-narrator/shared/books
 ```
 
 Because the Agent service also runs locally, it can directly read the same PDF files from this directory.
@@ -165,7 +166,7 @@ DATABASE_URL=sqlite:///./app.db
 AGENT_BASE_URL=http://127.0.0.1:8000
 
 # Shared PDF directory
-SHARED_BOOKS_DIR=~/Desktop/shared/books
+SHARED_BOOKS_DIR=~/Desktop/book-narrator/shared/books
 ```
 
 The backend expects the local Agent service to run at:
@@ -200,7 +201,7 @@ DATABASE_URL=sqlite:///./app.db
 AGENT_BASE_URL=http://127.0.0.1:8000
 
 # Shared PDF directory
-SHARED_BOOKS_DIR=~/Desktop/shared/books
+SHARED_BOOKS_DIR=~/Desktop/book-narrator/shared/books
 ```
 
 Do not include real passwords, API keys, tokens, or server credentials in `.env.example`.
@@ -210,7 +211,7 @@ Do not include real passwords, API keys, tokens, or server credentials in `.env.
 ## Install Dependencies
 
 ```bash
-cd ~/Desktop/backend-feature2.1_副本
+cd ~/Desktop/book-narrator/backend
 
 pip install -r requirements.txt
 ```
@@ -219,12 +220,12 @@ pip install -r requirements.txt
 
 ## Start the Backend
 
-Before starting the backend, make sure the local Agent service is already running.
+Before starting the backend, make sure the local Gemma 4 26B model runtime and the local Agent service are already running.
 
 Start backend:
 
 ```bash
-cd ~/Desktop/backend-feature2.1_副本
+cd ~/Desktop/book-narrator/backend
 
 uvicorn app.main:app --reload --port 8080
 ```
@@ -251,15 +252,19 @@ curl http://127.0.0.1:8080/health
 
 ## Required Services Before Running the Backend
 
-The backend depends on the local Agent service.
+The backend depends on the local Agent service. The Agent service depends on the local Gemma 4 26B model runtime.
 
-### 1. Start the local Gemma 4 model runtime
+---
+
+### 1. Start the Local Gemma 4 26B Model Runtime
 
 If using Ollama:
 
 ```bash
 ollama serve
 ```
+
+If Ollama is already running in the background, this step may not be necessary.
 
 Make sure the model is available:
 
@@ -279,12 +284,18 @@ If the model is missing:
 ollama pull gemma4:26b
 ```
 
----
-
-### 2. Start the local Agent service
+Test the model:
 
 ```bash
-cd ~/Desktop/agent-master
+ollama run gemma4:26b
+```
+
+---
+
+### 2. Start the Local Agent Service
+
+```bash
+cd ~/Desktop/book-narrator/agent
 
 uvicorn src.api.server:app --reload --host 127.0.0.1 --port 8000
 ```
@@ -311,12 +322,12 @@ http://127.0.0.1:8000/api/v1/agent/run
 
 The Agent service is responsible for:
 
-* reading selected PDF pages,
-* extracting source text,
-* building prompts,
-* applying output language requirements,
-* calling local `gemma4:26b`,
-* returning the final narration script.
+- reading selected PDF pages,
+- extracting source text,
+- building prompts,
+- applying output language requirements,
+- calling local `gemma4:26b`,
+- returning the final narration script.
 
 The backend then receives the generated script and produces audio.
 
@@ -327,13 +338,13 @@ The backend then receives the generated script and produces audio.
 Uploaded PDFs are saved into:
 
 ```text
-~/Desktop/shared/books
+~/Desktop/book-narrator/shared/books
 ```
 
 Example on macOS:
 
 ```text
-/Users/your-name/Desktop/shared/books
+/Users/your-name/Desktop/book-narrator/shared/books
 ```
 
 The backend should automatically create this directory when a PDF is uploaded.
@@ -341,7 +352,7 @@ The backend should automatically create this directory when a PDF is uploaded.
 If needed, create it manually:
 
 ```bash
-mkdir -p ~/Desktop/shared/books
+mkdir -p ~/Desktop/book-narrator/shared/books
 ```
 
 This directory is important because both the backend and local Agent service need to access the same PDF files.
@@ -363,7 +374,7 @@ To avoid this file path problem, this demo runs the Agent locally on the same ma
 This makes the PDF workflow simple and reliable:
 
 ```text
-Frontend -> Local Backend -> ~/Desktop/shared/books -> Local Agent -> Local Gemma 4 26B
+Frontend -> Local Backend -> ~/Desktop/book-narrator/shared/books -> Local Agent -> Local Gemma 4 26B
 ```
 
 ---
@@ -372,40 +383,40 @@ Frontend -> Local Backend -> ~/Desktop/shared/books -> Local Agent -> Local Gemm
 
 ### Book APIs
 
-| Method | Path                             | Description                   |
-| ------ | -------------------------------- | ----------------------------- |
-| POST   | `/agent/books/upload`            | Upload a PDF book             |
-| GET    | `/agent/books`                   | List uploaded PDF books       |
-| GET    | `/agent/books/{book_id}/outline` | Get PDF outline or page count |
+| Method | Path | Description |
+| --- | --- | --- |
+| POST | `/agent/books/upload` | Upload a PDF book |
+| GET | `/agent/books` | List uploaded PDF books |
+| GET | `/agent/books/{book_id}/outline` | Get PDF outline or page count |
 
 ---
 
 ### Narration APIs
 
-| Method | Path                                        | Description                                |
-| ------ | ------------------------------------------- | ------------------------------------------ |
-| POST   | `/agent/book-narrate`                       | Create a narration task                    |
-| POST   | `/agent/narration-history/{task_id}/cancel` | Cancel a running task                      |
-| GET    | `/agent/narration-history`                  | List narration history                     |
-| GET    | `/agent/narration-history/{task_id}`        | Get narration task detail                  |
-| PUT    | `/agent/narration-history/{task_id}`        | Update task name, note, or favorite status |
-| DELETE | `/agent/narration-history/{task_id}`        | Delete narration history                   |
+| Method | Path | Description |
+| --- | --- | --- |
+| POST | `/agent/book-narrate` | Create a narration task |
+| POST | `/agent/narration-history/{task_id}/cancel` | Cancel a running task |
+| GET | `/agent/narration-history` | List narration history |
+| GET | `/agent/narration-history/{task_id}` | Get narration task detail |
+| PUT | `/agent/narration-history/{task_id}` | Update task name, note, or favorite status |
+| DELETE | `/agent/narration-history/{task_id}` | Delete narration history |
 
 ---
 
 ### Audio API
 
-| Method | Path                              | Description                      |
-| ------ | --------------------------------- | -------------------------------- |
-| GET    | `/agent/backend-audio/{filename}` | Play or download generated audio |
+| Method | Path | Description |
+| --- | --- | --- |
+| GET | `/agent/backend-audio/{filename}` | Play or download generated audio |
 
 ---
 
 ### Health Check
 
-| Method | Path      | Description          |
-| ------ | --------- | -------------------- |
-| GET    | `/health` | Backend health check |
+| Method | Path | Description |
+| --- | --- | --- |
+| GET | `/health` | Backend health check |
 
 ---
 
@@ -419,13 +430,13 @@ curl -X POST http://127.0.0.1:8080/agent/books/upload \
 After upload, the file should appear in:
 
 ```text
-~/Desktop/shared/books
+~/Desktop/book-narrator/shared/books
 ```
 
 Check:
 
 ```bash
-ls -lh ~/Desktop/shared/books
+ls -lh ~/Desktop/book-narrator/shared/books
 ```
 
 ---
@@ -440,7 +451,7 @@ curl -X POST http://127.0.0.1:8080/agent/book-narrate \
     "mode": "page",
     "start_page": 1,
     "end_page": 3,
-    "style": "短视频",
+    "style": "Short-video Style",
     "reading_mode": "quick",
     "output_language": "en",
     "voice": "Ava",
@@ -473,11 +484,11 @@ The backend forwards the selected reading mode to the Agent.
 
 Quick Reading focuses on:
 
-* main characters,
-* key events,
-* important turning points,
-* main conflict,
-* visible outcomes.
+- main characters,
+- key events,
+- important turning points,
+- main conflict,
+- visible outcomes.
 
 It compresses secondary descriptions and avoids overly long analysis.
 
@@ -485,11 +496,11 @@ It compresses secondary descriptions and avoids overly long analysis.
 
 Deep Reading keeps more details and supports:
 
-* richer event development,
-* more complete character relationships,
-* writing style analysis,
-* character analysis,
-* deeper learning-oriented interpretation.
+- richer event development,
+- more complete character relationships,
+- writing style analysis,
+- character analysis,
+- deeper learning-oriented interpretation.
 
 ---
 
@@ -499,9 +510,9 @@ The backend forwards the selected narration style to the Agent.
 
 Supported styles include:
 
-* Short-video style
-* Bedtime story style
-* Film commentary style
+- Short-video style
+- Bedtime story style
+- Film commentary style
 
 The style affects the tone, pacing, and structure of the generated narration.
 
@@ -511,12 +522,12 @@ The style affects the tone, pacing, and structure of the generated narration.
 
 The backend supports the following output languages:
 
-* English
-* Chinese
-* French
-* Spanish
-* Russian
-* Arabic
+- English
+- Chinese
+- French
+- Spanish
+- Russian
+- Arabic
 
 The selected output language is sent to the Agent and should be reflected in the final narration script.
 
@@ -531,13 +542,13 @@ Example payload field:
 Supported language codes:
 
 | Language | Code |
-| -------- | ---- |
-| English  | `en` |
-| Chinese  | `zh` |
-| French   | `fr` |
-| Spanish  | `es` |
-| Russian  | `ru` |
-| Arabic   | `ar` |
+| --- | --- |
+| English | `en` |
+| Chinese | `zh` |
+| French | `fr` |
+| Spanish | `es` |
+| Russian | `ru` |
+| Arabic | `ar` |
 
 ---
 
@@ -545,14 +556,14 @@ Supported language codes:
 
 The selected voice should match the output language.
 
-| Output Language | Suggested Voices                 |
-| --------------- | -------------------------------- |
-| English         | Ava, Jenny, Guy, Brian           |
-| Chinese         | Xiaoxiao, Yunxi, Yunyang, Xiaoyi |
-| French          | Denise, Henri                    |
-| Spanish         | Elvira, Alvaro                   |
-| Russian         | Svetlana, Dmitry                 |
-| Arabic          | Zariyah, Hamed                   |
+| Output Language | Suggested Voices |
+| --- | --- |
+| English | Ava, Jenny, Guy, Brian |
+| Chinese | Xiaoxiao, Yunxi, Yunyang, Xiaoyi |
+| French | Denise, Henri |
+| Spanish | Elvira, Alvaro |
+| Russian | Svetlana, Dmitry |
+| Arabic | Zariyah, Hamed |
 
 If the generated script language does not match the selected voice language, audio generation may fail or sound unnatural.
 
@@ -600,22 +611,22 @@ app.db
 
 The narration task table stores:
 
-* task ID,
-* task name,
-* book information,
-* page range,
-* reading mode,
-* narration style,
-* output language,
-* voice,
-* task instruction,
-* generated script,
-* audio URLs,
-* status,
-* error message,
-* notes,
-* favorite status,
-* timestamps.
+- task ID,
+- task name,
+- book information,
+- page range,
+- reading mode,
+- narration style,
+- output language,
+- voice,
+- task instruction,
+- generated script,
+- audio URLs,
+- status,
+- error message,
+- notes,
+- favorite status,
+- timestamps.
 
 ---
 
@@ -666,7 +677,7 @@ Solution:
 Start the Agent:
 
 ```bash
-cd ~/Desktop/agent-master
+cd ~/Desktop/book-narrator/agent
 
 uvicorn src.api.server:app --reload --host 127.0.0.1 --port 8000
 ```
@@ -679,25 +690,59 @@ curl http://127.0.0.1:8000/api/v1/health
 
 ---
 
-### 2. Uploaded PDF Does Not Appear
+### 2. Gemma 4 26B Model Is Not Running
+
+Error symptoms:
+
+- Agent starts but generation fails.
+- Model endpoint cannot be reached.
+- Requests to the local model runtime fail.
+
+Check Ollama:
+
+```bash
+ollama list
+```
+
+Start Ollama if needed:
+
+```bash
+ollama serve
+```
+
+Pull the model if missing:
+
+```bash
+ollama pull gemma4:26b
+```
+
+Test the model:
+
+```bash
+ollama run gemma4:26b
+```
+
+---
+
+### 3. Uploaded PDF Does Not Appear
 
 Check the shared directory:
 
 ```bash
-ls -lh ~/Desktop/shared/books
+ls -lh ~/Desktop/book-narrator/shared/books
 ```
 
 If the folder does not exist:
 
 ```bash
-mkdir -p ~/Desktop/shared/books
+mkdir -p ~/Desktop/book-narrator/shared/books
 ```
 
 Then upload the PDF again from the frontend.
 
 ---
 
-### 3. PDF File Not Found by Agent
+### 4. PDF File Not Found by Agent
 
 Cause:
 
@@ -708,25 +753,25 @@ Solution:
 Make sure backend and Agent are running on the same local machine and the PDF exists in:
 
 ```text
-~/Desktop/shared/books
+~/Desktop/book-narrator/shared/books
 ```
 
 Check:
 
 ```bash
-ls -lh ~/Desktop/shared/books
+ls -lh ~/Desktop/book-narrator/shared/books
 ```
 
 ---
 
-### 4. No Audio Generated
+### 5. No Audio Generated
 
 Possible causes:
 
-* The generated script is empty.
-* The script language does not match the selected voice.
-* Edge TTS failed.
-* The audio file was not saved.
+- The generated script is empty.
+- The script language does not match the selected voice.
+- Edge TTS failed.
+- The audio file was not saved.
 
 Check audio files:
 
@@ -738,7 +783,7 @@ Check backend logs for audio generation errors.
 
 ---
 
-### 5. Output Language Is Wrong
+### 6. Output Language Is Wrong
 
 Check:
 
@@ -752,7 +797,7 @@ The Agent prompt should include the selected output language requirement.
 
 ---
 
-### 6. CORS Error
+### 7. CORS Error
 
 Make sure `.env` includes:
 
@@ -786,11 +831,11 @@ This backend is part of the **Gemma Book Narrator Agent** project for the Gemma 
 
 The project focuses on:
 
-* Future of Education
-* Digital Equity and Inclusivity
-* Multilingual learning support
-* Accessible PDF understanding
-* Audio-based learning.
+- Future of Education
+- Digital Equity and Inclusivity
+- Multilingual learning support
+- Accessible PDF understanding
+- Audio-based learning.
 
 The backend makes the project a complete runnable system by connecting user interaction, PDF storage, Agent generation, audio output, and task history.
 
